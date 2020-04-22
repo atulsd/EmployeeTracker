@@ -5,6 +5,8 @@ const clear = require("clear");
 const chalk = require("chalk");
 const figlet = require("figlet");
 
+const managerClass = require("./managerId");
+
 // create the connection information for the sql database
 var connection = mysql.createConnection({
   host: "localhost",
@@ -220,6 +222,85 @@ function addRole() {
             start();
           }
         );
+      });
+  });
+}
+
+function addEmployee() {
+  connection.query("SELECT * FROM role", function (err, roles) {
+    let managerList = [];
+    connection.query("SELECT * FROM employee", function (err, emp) {
+      if (err) throw err;
+      //managerList = emp.filter((emp) => emp.first_name);
+      for (var i = 0; i < emp.length; i++) {
+        managerList.push(emp[i].first_name);
+      }
+      // emp.forEach((emp) => managerList.push(emp.first_name));
+    });
+
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "firstName",
+          type: "input",
+          message: "Enter First Name:",
+        },
+        {
+          name: "lastName",
+          type: "input",
+          message: "Enter Last Name:",
+        },
+        {
+          name: "role",
+          type: "rawlist",
+          choices: function () {
+            var roleList = [];
+            roles.forEach((role) => roleList.push(role.role_title));
+            return roleList;
+          },
+          message: "Please select role of the employee:",
+        },
+        {
+          name: "manager",
+          type: "rawlist",
+          choices: function () {
+            return managerList;
+          },
+          message: "Please select manager of the employee:",
+        },
+      ])
+      .then((response) => {
+        var roleId;
+        roles.forEach((role) =>
+          role.role_title === response.role ? (roleId = role.id) : null
+        );
+        console.log("response.manager has the value: ", response.manager);
+
+        connection.query("SELECT * FROM employee", function (err, emp) {
+          let managerId;
+          if (err) throw err;
+          emp.forEach((emp) =>
+            emp.first_name === response.manager ? (managerId = emp.id) : null
+          );
+          // const managerID = new managerClass(response.manager);
+          // const managerId = managerID.getManagerid(emp);
+
+          connection.query(
+            "INSERT INTO employee SET ?",
+            {
+              first_name: response.firstName,
+              last_name: response.lastName,
+              role_id: roleId,
+              manager_id: managerId,
+            },
+            function (err) {
+              if (err) throw err;
+              console.log("Employee added successfully!");
+              start();
+            }
+          );
+        });
       });
   });
 }
