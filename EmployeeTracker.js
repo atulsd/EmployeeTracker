@@ -23,11 +23,6 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
   console.log(`Connection id is: ${connection.threadId}`);
-  //   var values = [
-  //     ["max", 20],
-  //     ["joe", 30],
-  //   ];
-  //   console.table(["name", "age"], values);
   clearScreen();
   start();
 });
@@ -100,6 +95,48 @@ function start() {
           break;
       }
     });
+}
+
+function viewEmployees() {
+  connection.query(
+    `Select employee.id as Employee_Id,first_name as First_Name,last_name as Last_Name,name as Department_Name,role_title as Title,salary as Salary from department inner join employee on employee.role_id=department.id inner join role on role.department_id=department.id`,
+    function (err, res) {
+      let detail = res;
+      let manager = [];
+      if (err) throw err;
+      connection.query(`Select * from employee`, function (err, res) {
+        if (err) throw err;
+        for (const employee in res) {
+          const managerId = res[employee].manager_id;
+          for (const employee in res) {
+            if (managerId === res[employee].id) {
+              manager.push(
+                res[employee].first_name + " " + res[employee].last_name
+              );
+            } else {
+              manager.push("null");
+            }
+          }
+          console.log(res[employee]);
+          console.log(manager);
+        }
+      });
+      detail += manager;
+      console.table(`\n\n`, res, manager);
+    }
+  );
+  start();
+}
+
+function viewDepartments() {
+  connection.query(
+    "SELECT id as Department_Id, name as Department_Name FROM department",
+    function (err, res) {
+      if (err) throw err;
+      console.table(`\n\n`, res);
+      start();
+    }
+  );
 }
 
 function stop() {
