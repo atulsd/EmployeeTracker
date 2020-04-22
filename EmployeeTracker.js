@@ -150,6 +150,56 @@ function viewRoles() {
   );
 }
 
+function addRole() {
+  connection.query("SELECT * FROM department", function (err, departments) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "title",
+          type: "input",
+          message: "Enter role title:",
+        },
+        {
+          name: "salary",
+          type: "input",
+          message: "Enter Salary:",
+        },
+        {
+          name: "department",
+          type: "rawlist",
+          choices: function () {
+            return (departmentList = departments.filter(
+              (department) => department.name
+            ));
+          },
+          message: "Please select department you want to add role in:",
+        },
+      ])
+      .then((response) => {
+        var departmentId;
+        departments.forEach((department) =>
+          department.name === response.department
+            ? (departmentId = department.id)
+            : null
+        );
+        connection.query(
+          "INSERT INTO role SET ?",
+          {
+            role_title: response.title,
+            salary: response.salary,
+            department_id: departmentId,
+          },
+          function (err) {
+            if (err) throw err;
+            console.log("Your role was created successfully!");
+            start();
+          }
+        );
+      });
+  });
+}
+
 function stop() {
   console.log(
     chalk.greenBright(
