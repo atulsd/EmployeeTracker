@@ -228,7 +228,9 @@ function addRole() {
 
 function addEmployee() {
   connection.query("SELECT * FROM role", function (err, roles) {
-    let managerList = [];
+    if (err) throw err;
+
+    let managerList = ["None"];
     connection.query("SELECT * FROM employee", function (err, emp) {
       if (err) throw err;
       //managerList = emp.filter((emp) => emp.first_name);
@@ -238,7 +240,6 @@ function addEmployee() {
       // emp.forEach((emp) => managerList.push(emp.first_name));
     });
 
-    if (err) throw err;
     inquirer
       .prompt([
         {
@@ -264,9 +265,7 @@ function addEmployee() {
         {
           name: "manager",
           type: "rawlist",
-          choices: function () {
-            return managerList;
-          },
+          choices: managerList,
           message: "Please select manager of the employee:",
         },
       ])
@@ -275,7 +274,6 @@ function addEmployee() {
         roles.forEach((role) =>
           role.role_title === response.role ? (roleId = role.id) : null
         );
-        console.log("response.manager has the value: ", response.manager);
 
         connection.query("SELECT * FROM employee", function (err, emp) {
           let managerId;
@@ -297,6 +295,75 @@ function addEmployee() {
             function (err) {
               if (err) throw err;
               console.log("Employee added successfully!");
+              start();
+            }
+          );
+        });
+      });
+  });
+}
+
+function updateEmployeeRole() {
+  connection.query("SELECT * FROM employee", function (err, emp) {
+    if (err) throw err;
+    let roleList = [];
+    connection.query("SELECT * FROM role", function (err, role) {
+      if (err) throw err;
+      //managerList = emp.filter((emp) => emp.first_name);
+      for (var i = 0; i < role.length; i++) {
+        roleList.push(role[i].role_title);
+      }
+      // emp.forEach((emp) => managerList.push(emp.first_name));
+    });
+
+    inquirer
+      .prompt([
+        {
+          name: "getEmployee",
+          type: "rawlist",
+          choices: function () {
+            var empList = [];
+            emp.forEach((employee) =>
+              empList.push(employee.first_name + " " + employee.last_name)
+            );
+            return empList;
+          },
+          message: "Which employee's role do you want to change?:",
+        },
+        {
+          name: "role",
+          type: "rawlist",
+          choices: roleList,
+          message: "Please select new role:",
+        },
+      ])
+      .then((response) => {
+        let empId;
+        emp.forEach((emp) =>
+          emp.first_name + " " + emp.last_name === response.getEmployee
+            ? (empId = emp.id)
+            : null
+        );
+        console.log("Employee Id is: ", empId);
+        connection.query("SELECT * FROM role", function (err, role) {
+          let roleId;
+          if (err) throw err;
+          role.forEach((role) =>
+            role.role_title === response.role ? (roleId = role.id) : null
+          );
+          connection.query(
+            "UPDATE employee SET ? WHERE ?",
+            [
+              {
+                role_id: roleId,
+              },
+              {
+                id: empId,
+              },
+            ],
+            function (err) {
+              if (err) throw err;
+              console.log("Employee's role updated successfully!");
               start();
             }
           );
