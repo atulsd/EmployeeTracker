@@ -139,6 +139,17 @@ function viewDepartments() {
   );
 }
 
+function viewRoles() {
+  connection.query(
+    "SELECT id as Role_Id,role_title as Role_Title,salary as Salary,department_id as Department_ID FROM role",
+    function (err, res) {
+      if (err) throw err;
+      console.table(`\n\n`, res);
+      start();
+    }
+  );
+}
+
 function stop() {
   console.log(
     chalk.greenBright(
