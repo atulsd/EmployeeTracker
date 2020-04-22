@@ -139,6 +139,30 @@ function viewDepartments() {
   );
 }
 
+function addDepartment() {
+  inquirer
+    .prompt([
+      {
+        name: "name",
+        type: "input",
+        message: "Enter department's name:",
+      },
+    ])
+    .then((response) => {
+      connection.query(
+        "INSERT INTO department SET ?",
+        {
+          name: response.name,
+        },
+        function (err) {
+          if (err) throw err;
+          console.log("Your department was created successfully!");
+          start();
+        }
+      );
+    });
+}
+
 function viewRoles() {
   connection.query(
     "SELECT id as Role_Id,role_title as Role_Title,salary as Salary,department_id as Department_ID FROM role",
