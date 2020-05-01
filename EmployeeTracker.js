@@ -110,6 +110,10 @@ function start() {
           viewTotalUtilizedBudget();
           break;
 
+        case "Remove Role":
+          removeRole();
+          break;
+
         case "Exit":
           stop();
           break;
@@ -649,6 +653,57 @@ function viewTotalUtilizedBudget() {
                   })
                 )
               );
+            }
+            start();
+          }
+        );
+      });
+  });
+}
+
+function removeRole() {
+  connection.query("SELECT * FROM role", function (err, role) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "getRole",
+          type: "rawlist",
+          choices: function () {
+            var roleList = [];
+            role.forEach((role) => roleList.push(role.role_title));
+            return roleList;
+          },
+          message: "Which role do you want to remove?:",
+        },
+      ])
+      .then((response) => {
+        let roleId;
+        role.forEach((role) =>
+          role.role_title === response.getRole ? (roleId = role.id) : null
+        );
+        console.log("Role Id is: ", roleId);
+        connection.query(
+          "Delete from role WHERE ?",
+          [
+            {
+              id: roleId,
+            },
+          ],
+          function (err) {
+            if (err) {
+              console.log(
+                chalk.greenBright(
+                  figlet.textSync("Can't Remove this Role", {
+                    horizontalLayout: "full",
+                  })
+                )
+              );
+              console.log(
+                "\n\nPlease remove employees under this role first......\n\n"
+              );
+            } else {
+              console.log("\n\nRole removed successfully!\n\n");
             }
             start();
           }
