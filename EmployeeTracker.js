@@ -54,7 +54,7 @@ function start() {
         "Update Employee Role",
         "Remove Employee",
         "Remove Role",
-        "O- Remove Department",
+        "Remove Department",
         "Update Employee Manager",
         "View Total Utilized Budget of a Department",
         "Exit",
@@ -112,6 +112,10 @@ function start() {
 
         case "Remove Role":
           removeRole();
+          break;
+
+        case "Remove Department":
+          removeDepartment();
           break;
 
         case "Exit":
@@ -704,6 +708,59 @@ function removeRole() {
               );
             } else {
               console.log("\n\nRole removed successfully!\n\n");
+            }
+            start();
+          }
+        );
+      });
+  });
+}
+
+function removeDepartment() {
+  connection.query("SELECT * FROM department", function (err, dep) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "getDepartment",
+          type: "rawlist",
+          choices: function () {
+            var departmentList = [];
+            dep.forEach((department) => departmentList.push(department.name));
+            return departmentList;
+          },
+          message: "Which department do you want to remove?:",
+        },
+      ])
+      .then((response) => {
+        let departmentId;
+        dep.forEach((department) =>
+          department.name === response.getDepartment
+            ? (departmentId = department.id)
+            : null
+        );
+        console.log("Department Id is: ", departmentId);
+        connection.query(
+          "Delete from department WHERE ?",
+          [
+            {
+              id: departmentId,
+            },
+          ],
+          function (err) {
+            if (err) {
+              console.log(
+                chalk.greenBright(
+                  figlet.textSync("Can't Remove this Dep", {
+                    horizontalLayout: "full",
+                  })
+                )
+              );
+              console.log(
+                "\n\nPlease remove roles under this department first......\n\n"
+              );
+            } else {
+              console.log("\n\nDepartment removed successfully!\n\n");
             }
             start();
           }
