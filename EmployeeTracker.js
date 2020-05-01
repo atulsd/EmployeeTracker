@@ -53,10 +53,10 @@ function start() {
         "Add Employee",
         "Update Employee Role",
         "Remove Employee",
-        "O- Remove Role",
+        "Remove Role",
         "O- Remove Department",
         "Update Employee Manager",
-        "O- View Total Utilized Budget of a Department",
+        "View Total Utilized Budget of a Department",
         "Exit",
       ],
     })
@@ -104,6 +104,10 @@ function start() {
 
         case "View All Employees by Manager":
           viewEmployeesByManager();
+          break;
+
+        case "View Total Utilized Budget of a Department":
+          viewTotalUtilizedBudget();
           break;
 
         case "Exit":
@@ -584,6 +588,56 @@ function viewEmployeesByManager() {
           where e.manager_id=?
           order by e.id asc`,
           [managerId],
+          function (err, res) {
+            if (err) throw err;
+            if (res.length > 0) console.table(`\n\n`, res);
+            else {
+              console.log(
+                chalk.greenBright(
+                  figlet.textSync("\n\nNO DATA....", {
+                    horizontalLayout: "full",
+                  })
+                )
+              );
+            }
+            start();
+          }
+        );
+      });
+  });
+}
+
+function viewTotalUtilizedBudget() {
+  connection.query("SELECT * FROM department", function (err, dep) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "getDepartment",
+          type: "rawlist",
+          choices: function () {
+            var departmentList = [];
+            dep.forEach((department) => departmentList.push(department.name));
+            return departmentList;
+          },
+          message: "Which department you want to view utilized budget from?:",
+        },
+      ])
+      .then((response) => {
+        let depId;
+        dep.forEach((dep) =>
+          dep.name === response.getDepartment ? (depId = dep.id) : null
+        );
+
+        connection.query(
+          `Select d.id as Department_ID,d.name as Department_Name,
+          Sum(role.salary) as Utilized_Budget
+          from department d
+          join role on role.department_id=d.id
+          join employeedb.employee e on e.role_id=role.id
+          where d.id=?
+          group by d.id`,
+          [depId],
           function (err, res) {
             if (err) throw err;
             if (res.length > 0) console.table(`\n\n`, res);
