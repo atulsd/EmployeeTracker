@@ -52,7 +52,7 @@ function start() {
         "Add Role",
         "Add Employee",
         "Update Employee Role",
-        "O- Remove Employee",
+        "Remove Employee",
         "O- Remove Role",
         "O- Remove Department",
         "O- Update Employee Manager",
@@ -90,6 +90,10 @@ function start() {
           updateEmployeeRole();
           break;
 
+        case "Remove Employee":
+          removeEmployee();
+          break;
+
         case "Exit":
           stop();
           break;
@@ -107,7 +111,8 @@ function viewEmployees() {
      FROM employeedb.employee e
      left join employeedb.employee m on m.id = e.manager_id
      join role on role.id=e.role_id
-     join department on role.department_id=department.id`,
+     join department on role.department_id=department.id
+     order by e.id asc`,
     function (err, res) {
       if (err) throw err;
       console.table(`\n\n`, res);
@@ -267,9 +272,6 @@ function addEmployee() {
           emp.forEach((emp) =>
             emp.first_name === response.manager ? (managerId = emp.id) : null
           );
-          // const managerID = new managerClass(response.manager);
-          // const managerId = managerID.getManagerid(emp);
-
           connection.query(
             "INSERT INTO employee SET ?",
             {
@@ -282,22 +284,9 @@ function addEmployee() {
               if (err) throw err;
             }
           );
-          // connection.query("SELECT * FROM employee", function (err, emp) {
-          //   if (err) throw err;
           console.log("Manager is: ", response.manager);
-
-          var managingId = emp[emp.length - 1].id;
-          console.log("emp id is: ", managingId);
-          connection.query("INSERT INTO manager SET ?", {
-            full_name: response.manager,
-            managing: managingId,
-          }),
-            function (err) {
-              if (err) throw err;
-            };
           console.log("Employee added successfully!");
           start();
-          // });
         });
       });
   });
@@ -368,6 +357,49 @@ function updateEmployeeRole() {
             }
           );
         });
+      });
+  });
+}
+
+function removeEmployee() {
+  connection.query("SELECT * FROM employee", function (err, emp) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "getEmployee",
+          type: "rawlist",
+          choices: function () {
+            var empList = [];
+            emp.forEach((employee) =>
+              empList.push(employee.first_name + " " + employee.last_name)
+            );
+            return empList;
+          },
+          message: "Which employee do you want to remove?:",
+        },
+      ])
+      .then((response) => {
+        let empId;
+        emp.forEach((emp) =>
+          emp.first_name + " " + emp.last_name === response.getEmployee
+            ? (empId = emp.id)
+            : null
+        );
+        console.log("Employee Id is: ", empId);
+        connection.query(
+          "Delete from employee WHERE ?",
+          [
+            {
+              id: empId,
+            },
+          ],
+          function (err) {
+            if (err) throw err;
+            console.log("Employee removed successfully!");
+            start();
+          }
+        );
       });
   });
 }
