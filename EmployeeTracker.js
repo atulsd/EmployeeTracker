@@ -47,7 +47,7 @@ function start() {
         "View All Departments",
         "View All Roles",
         "View All Employees by Department",
-        "O- View All Employees by Manager",
+        "View All Employees by Manager",
         "Add Department",
         "Add Role",
         "Add Employee",
@@ -100,6 +100,10 @@ function start() {
 
         case "View All Employees by Department":
           viewEmployeesByDepartment();
+          break;
+
+        case "View All Employees by Manager":
+          viewEmployeesByManager();
           break;
 
         case "Exit":
@@ -489,20 +493,114 @@ async function updateEmployeeManager() {
 }
 
 function viewEmployeesByDepartment() {
-  connection.query(
-    `Select d.id as Department_ID,d.name as Department_Name,
-    e.first_name as First_Name,e.last_name as Last_Name,
-    role.role_title as Role_Title
-    from department d
-    join role on role.department_id=d.id
-    join employeedb.employee e on e.role_id=role.id
-    order by d.id`,
-    function (err, res) {
-      if (err) throw err;
-      console.table(`\n\n`, res);
-    }
-  );
-  start();
+  connection.query("SELECT * FROM department", function (err, dep) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "getDepartment",
+          type: "rawlist",
+          choices: function () {
+            var departmentList = [];
+            dep.forEach((department) => departmentList.push(department.name));
+            return departmentList;
+          },
+          message: "Which department you want to view employee from?:",
+        },
+      ])
+      .then((response) => {
+        let depId;
+        dep.forEach((dep) =>
+          dep.name === response.getDepartment ? (depId = dep.id) : null
+        );
+
+        connection.query(
+          `Select d.id as Department_ID,d.name as Department_Name,
+            e.first_name as First_Name,e.last_name as Last_Name,
+            role.role_title as Role_Title
+            from department d
+            join role on role.department_id=d.id
+            join employeedb.employee e on e.role_id=role.id
+            where d.id=?`,
+          [depId],
+          function (err, res) {
+            if (err) throw err;
+            if (res.length > 0) console.table(`\n\n`, res);
+            else {
+              console.log(
+                chalk.greenBright(
+                  figlet.textSync("\n\nNO DATA....", {
+                    horizontalLayout: "full",
+                  })
+                )
+              );
+            }
+            start();
+          }
+        );
+      });
+  });
+}
+
+function viewEmployeesByManager() {
+  connection.query("SELECT * FROM employee", function (err, emp) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "getManager",
+          type: "rawlist",
+          choices: function () {
+            var empList = [];
+            emp.forEach((employee) => {
+              empList.push(employee.first_name + " " + employee.last_name);
+            });
+            return empList;
+          },
+          message: "Which manager's employees do you want to view?:",
+        },
+      ])
+      .then((response) => {
+        let managerId;
+        emp.forEach((emp) =>
+          emp.first_name + " " + emp.last_name === response.getManager
+            ? (managerId = emp.id)
+            : null
+        );
+        console.log("Manager Id is: ", managerId);
+
+        connection.query(
+          `SELECT 
+          e.manager_id as Manager_ID,
+          concat(m.first_name," ",m.last_name) as Manager,
+          e.first_name as First_Name,e.last_name as Last_Name,
+          role.role_title as Role_Title,
+          department.name as Department,
+          role.salary as Salary
+          FROM employeedb.employee e
+          left join employeedb.employee m on m.id = e.manager_id
+          join role on role.id=e.role_id
+          join department on role.department_id=department.id
+          where e.manager_id=?
+          order by e.id asc`,
+          [managerId],
+          function (err, res) {
+            if (err) throw err;
+            if (res.length > 0) console.table(`\n\n`, res);
+            else {
+              console.log(
+                chalk.greenBright(
+                  figlet.textSync("\n\nNO DATA....", {
+                    horizontalLayout: "full",
+                  })
+                )
+              );
+            }
+            start();
+          }
+        );
+      });
+  });
 }
 
 function stop() {
