@@ -46,7 +46,7 @@ function start() {
         "View All Employees",
         "View All Departments",
         "View All Roles",
-        "O- View All Employees by Department",
+        "View All Employees by Department",
         "O- View All Employees by Manager",
         "Add Department",
         "Add Role",
@@ -96,6 +96,10 @@ function start() {
 
         case "Update Employee Manager":
           updateEmployeeManager();
+          break;
+
+        case "View All Employees by Department":
+          viewEmployeesByDepartment();
           break;
 
         case "Exit":
@@ -482,6 +486,23 @@ async function updateEmployeeManager() {
   } catch (err) {
     console.log("Can not read properties.");
   }
+}
+
+function viewEmployeesByDepartment() {
+  connection.query(
+    `Select d.id as Department_ID,d.name as Department_Name,
+    e.first_name as First_Name,e.last_name as Last_Name,
+    role.role_title as Role_Title
+    from department d
+    join role on role.department_id=d.id
+    join employeedb.employee e on e.role_id=role.id
+    order by d.id`,
+    function (err, res) {
+      if (err) throw err;
+      console.table(`\n\n`, res);
+    }
+  );
+  start();
 }
 
 function stop() {
