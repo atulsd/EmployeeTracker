@@ -5,8 +5,6 @@ const clear = require("clear");
 const chalk = require("chalk");
 const figlet = require("figlet");
 
-const managerClass = require("./managerId");
-
 // create the connection information for the sql database
 var connection = mysql.createConnection({
   host: "localhost",
@@ -101,30 +99,18 @@ function start() {
 
 function viewEmployees() {
   connection.query(
-    `Select employee.id as Employee_Id,first_name as First_Name,last_name as Last_Name,name as Department_Name,role_title as Title,salary as Salary from department inner join employee on employee.role_id=department.id inner join role on role.department_id=department.id`,
+    `SELECT e.id as Employee_ID,e.first_name as First_Name,e.last_name as Last_Name,
+     role.role_title as Role_Title,
+     department.name as Department,
+     role.salary as Salary,
+     concat(m.first_name," ",m.last_name) as Manager
+     FROM employeedb.employee e
+     left join employeedb.employee m on m.id = e.manager_id
+     join role on role.id=e.role_id
+     join department on role.department_id=department.id`,
     function (err, res) {
-      let detail = res;
-      let manager = [];
       if (err) throw err;
-      connection.query(`Select * from employee`, function (err, res) {
-        if (err) throw err;
-        for (const employee in res) {
-          const managerId = res[employee].manager_id;
-          for (const employee in res) {
-            if (managerId === res[employee].id) {
-              manager.push(
-                res[employee].first_name + " " + res[employee].last_name
-              );
-            } else {
-              manager.push("null");
-            }
-          }
-          console.log(res[employee]);
-          console.log(manager);
-        }
-      });
-      detail += manager;
-      console.table(`\n\n`, res, manager);
+      console.table(`\n\n`, res);
     }
   );
   start();
@@ -294,10 +280,24 @@ function addEmployee() {
             },
             function (err) {
               if (err) throw err;
-              console.log("Employee added successfully!");
-              start();
             }
           );
+          // connection.query("SELECT * FROM employee", function (err, emp) {
+          //   if (err) throw err;
+          console.log("Manager is: ", response.manager);
+
+          var managingId = emp[emp.length - 1].id;
+          console.log("emp id is: ", managingId);
+          connection.query("INSERT INTO manager SET ?", {
+            full_name: response.manager,
+            managing: managingId,
+          }),
+            function (err) {
+              if (err) throw err;
+            };
+          console.log("Employee added successfully!");
+          start();
+          // });
         });
       });
   });
