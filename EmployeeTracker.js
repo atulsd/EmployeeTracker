@@ -55,7 +55,7 @@ function start() {
         "Remove Employee",
         "O- Remove Role",
         "O- Remove Department",
-        "O- Update Employee Manager",
+        "Update Employee Manager",
         "O- View Total Utilized Budget of a Department",
         "Exit",
       ],
@@ -92,6 +92,10 @@ function start() {
 
         case "Remove Employee":
           removeEmployee();
+          break;
+
+        case "Update Employee Manager":
+          updateEmployeeManager();
           break;
 
         case "Exit":
@@ -402,6 +406,82 @@ function removeEmployee() {
         );
       });
   });
+}
+
+async function updateEmployeeManager() {
+  try {
+    connection.query("SELECT * FROM employee", async function (err, emp) {
+      let empId;
+      if (err) throw err;
+      await inquirer
+        .prompt([
+          {
+            name: "getEmployee",
+            type: "rawlist",
+            choices: function () {
+              var empList = [];
+              emp.forEach((employee) =>
+                empList.push(employee.first_name + " " + employee.last_name)
+              );
+              return empList;
+            },
+            message: "Which employee's manager do you want to update?:",
+          },
+        ])
+        .then((response) => {
+          emp.forEach((emp) =>
+            emp.first_name + " " + emp.last_name === response.getEmployee
+              ? (empId = emp.id)
+              : null
+          );
+        });
+
+      await inquirer
+        .prompt([
+          {
+            name: "setManager",
+            type: "rawlist",
+            choices: function () {
+              var empList = [];
+              emp.forEach((employee) => {
+                if (!(parseInt(employee.id) === parseInt(empId)))
+                  empList.push(employee.first_name + " " + employee.last_name);
+              });
+              return empList;
+            },
+            message:
+              "Which employee do you want to set as manager for the selected employee?:",
+          },
+        ])
+        .then((response) => {
+          let managerId;
+          emp.forEach((emp) =>
+            emp.first_name + " " + emp.last_name === response.setManager
+              ? (managerId = emp.id)
+              : null
+          );
+          console.log("Employee Id is: ", empId);
+          connection.query(
+            "UPDATE employee SET ? WHERE ?",
+            [
+              {
+                manager_id: managerId,
+              },
+              {
+                id: empId,
+              },
+            ],
+            function (err) {
+              if (err) throw err;
+              console.log("Employee's manager updateed successfully!");
+              start();
+            }
+          );
+        });
+    });
+  } catch (err) {
+    console.log("Can not read properties.");
+  }
 }
 
 function stop() {
