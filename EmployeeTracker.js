@@ -140,9 +140,9 @@ function viewEmployees() {
     function (err, res) {
       if (err) throw err;
       console.table(`\n\n`, res);
+      start();
     }
   );
-  start();
 }
 
 function viewDepartments() {
@@ -173,7 +173,7 @@ function addDepartment() {
         },
         function (err) {
           if (err) throw err;
-          console.log("Your department was created successfully!");
+          console.log("\n\nYour department was created successfully!\n\n");
           start();
         }
       );
@@ -233,7 +233,7 @@ function addRole() {
           },
           function (err) {
             if (err) throw err;
-            console.log("Your role was created successfully!");
+            console.log("\n\nYour role was created successfully!\n\n");
             start();
           }
         );
@@ -248,11 +248,9 @@ function addEmployee() {
     let managerList = ["None"];
     connection.query("SELECT * FROM employee", function (err, emp) {
       if (err) throw err;
-      //managerList = emp.filter((emp) => emp.first_name);
-      for (var i = 0; i < emp.length; i++) {
-        managerList.push(emp[i].first_name);
-      }
-      // emp.forEach((emp) => managerList.push(emp.first_name));
+      emp.forEach((emp) =>
+        managerList.push(emp.first_name + " " + emp.last_name)
+      );
     });
 
     inquirer
@@ -294,7 +292,9 @@ function addEmployee() {
           let managerId;
           if (err) throw err;
           emp.forEach((emp) =>
-            emp.first_name === response.manager ? (managerId = emp.id) : null
+            emp.first_name + " " + emp.last_name === response.manager
+              ? (managerId = emp.id)
+              : null
           );
           connection.query(
             "INSERT INTO employee SET ?",
@@ -308,8 +308,7 @@ function addEmployee() {
               if (err) throw err;
             }
           );
-          console.log("Manager is: ", response.manager);
-          console.log("Employee added successfully!");
+          console.log("\n\nEmployee added successfully!\n\n");
           start();
         });
       });
@@ -322,11 +321,7 @@ function updateEmployeeRole() {
     let roleList = [];
     connection.query("SELECT * FROM role", function (err, role) {
       if (err) throw err;
-      //managerList = emp.filter((emp) => emp.first_name);
-      for (var i = 0; i < role.length; i++) {
-        roleList.push(role[i].role_title);
-      }
-      // emp.forEach((emp) => managerList.push(emp.first_name));
+      role.forEach((role) => roleList.push(role.role_title));
     });
 
     inquirer
@@ -357,7 +352,6 @@ function updateEmployeeRole() {
             ? (empId = emp.id)
             : null
         );
-        console.log("Employee Id is: ", empId);
         connection.query("SELECT * FROM role", function (err, role) {
           let roleId;
           if (err) throw err;
@@ -376,7 +370,7 @@ function updateEmployeeRole() {
             ],
             function (err) {
               if (err) throw err;
-              console.log("Employee's role updated successfully!");
+              console.log("\n\nEmployee's role updated successfully!\n\n");
               start();
             }
           );
@@ -410,7 +404,6 @@ function removeEmployee() {
             ? (empId = emp.id)
             : null
         );
-        console.log("Employee Id is: ", empId);
         connection.query(
           "Delete from employee WHERE ?",
           [
@@ -420,7 +413,7 @@ function removeEmployee() {
           ],
           function (err) {
             if (err) throw err;
-            console.log("Employee removed successfully!");
+            console.log("\n\nEmployee removed successfully!\n\n");
             start();
           }
         );
@@ -480,7 +473,6 @@ async function updateEmployeeManager() {
               ? (managerId = emp.id)
               : null
           );
-          console.log("Employee Id is: ", empId);
           connection.query(
             "UPDATE employee SET ? WHERE ?",
             [
@@ -493,7 +485,7 @@ async function updateEmployeeManager() {
             ],
             function (err) {
               if (err) throw err;
-              console.log("Employee's manager updateed successfully!");
+              console.log("\n\nEmployee's manager updated successfully!\n\n");
               start();
             }
           );
@@ -525,7 +517,6 @@ function viewEmployeesByDepartment() {
         dep.forEach((dep) =>
           dep.name === response.getDepartment ? (depId = dep.id) : null
         );
-
         connection.query(
           `Select d.id as Department_ID,d.name as Department_Name,
             e.first_name as First_Name,e.last_name as Last_Name,
@@ -537,8 +528,9 @@ function viewEmployeesByDepartment() {
           [depId],
           function (err, res) {
             if (err) throw err;
-            if (res.length > 0) console.table(`\n\n`, res);
-            else {
+            if (res.length > 0) {
+              console.table(`\n\n`, res);
+            } else {
               console.log(
                 chalk.greenBright(
                   figlet.textSync("\n\nNO DATA....", {
@@ -579,8 +571,6 @@ function viewEmployeesByManager() {
             ? (managerId = emp.id)
             : null
         );
-        console.log("Manager Id is: ", managerId);
-
         connection.query(
           `SELECT 
           e.manager_id as Manager_ID,
@@ -598,8 +588,9 @@ function viewEmployeesByManager() {
           [managerId],
           function (err, res) {
             if (err) throw err;
-            if (res.length > 0) console.table(`\n\n`, res);
-            else {
+            if (res.length > 0) {
+              console.table(`\n\n`, res);
+            } else {
               console.log(
                 chalk.greenBright(
                   figlet.textSync("\n\nNO DATA....", {
@@ -648,8 +639,9 @@ function viewTotalUtilizedBudget() {
           [depId],
           function (err, res) {
             if (err) throw err;
-            if (res.length > 0) console.table(`\n\n`, res);
-            else {
+            if (res.length > 0) {
+              console.table(`\n\n`, res);
+            } else {
               console.log(
                 chalk.greenBright(
                   figlet.textSync("\n\nNO DATA....", {
@@ -686,7 +678,6 @@ function removeRole() {
         role.forEach((role) =>
           role.role_title === response.getRole ? (roleId = role.id) : null
         );
-        console.log("Role Id is: ", roleId);
         connection.query(
           "Delete from role WHERE ?",
           [
@@ -739,7 +730,6 @@ function removeDepartment() {
             ? (departmentId = department.id)
             : null
         );
-        console.log("Department Id is: ", departmentId);
         connection.query(
           "Delete from department WHERE ?",
           [
