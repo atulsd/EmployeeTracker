@@ -1,0 +1,34 @@
+{
+  "name": "employeetracker",
+  "version": "1.0.1",
+  "description": "Managing a company's employees",
+  "main": "EmployeeTracker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node EmployeeTracker.js",
+    "watch": "nodemon EmployeeTracker.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atulsd/EmployeeTracker.git"
+  },
+  "keywords": [
+    "cms",
+    "for",
+    "employees"
+  ],
+  "author": "Atul Mahajan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/atulsd/EmployeeTracker/issues"
+  },
+  "homepage": "https://github.com/atulsd/EmployeeTracker#readme",
+  "dependencies": {
+    "chalk": "^4.0.0",
+    "clear": "^0.1.0",
+    "console.table": "^0.10.0",
+    "figlet": "^1.3.0",
+    "inquirer": "^7.1.0",
+    "mysql": "^2.18.1"
+  }
+}
