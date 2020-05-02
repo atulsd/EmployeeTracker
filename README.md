@@ -78,7 +78,7 @@ This application is a **C**ontent **M**anagement **S**ystem for managing a compa
 
 # Screenshots
 
-![NoteTaker.gif](EmployeeTracker.gif)
+![EmployeeTracker.gif](EmployeeTracker.gif)
 
 # References:
 
